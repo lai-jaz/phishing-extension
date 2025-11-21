@@ -1,21 +1,20 @@
 let latestScanResult = null;
-chrome.tabs.onUpdated.addListener((changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === "complete" && tab.url) {
         latestScanResult = scanURL(tab.url);
     }
 });
-
-chrome.runtime.onMessage.addListener((msg,sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     switch (msg.type) {
-        case "scan":
+        case "MANUAL_SCAN":
             latestScanResult = scanURL(msg.url);
             chrome.runtime.sendMessage({
-                type: "scanResult",
+                type: "SCAN_RESULT",
                 data: latestScanResult
             });
             break;
 
-        case "getScanResult":
+        case "GET_SCAN_RESULT":
             sendResponse(latestScanResult);
             break;
     }
@@ -43,7 +42,7 @@ function scanURL(url) {
             score += 15;
         }
         if (hostname.split(".").length>3){
-            score=+10;
+            score+=10;
         }
         if(!url.startsWith("https"))
         {
@@ -56,6 +55,7 @@ function scanURL(url) {
         if (keywords.some(word => hostname.toLowerCase().includes(word))) {
             score += 10;
         }
+
     } catch (e) {
         console.error("Invalid URL");
     }
@@ -64,19 +64,19 @@ function scanURL(url) {
         {status = "Suspicious";}
     else if (score >= 70) 
         {status = "Dangerous";}
+
     return {
         url,
         score,
         status,
     };
 }
-
 chrome.webRequest.onBeforeRedirect.addListener(
     (details) => {
         if (latestScanResult) {
             latestScanResult.score += 5; 
             chrome.runtime.sendMessage({
-                type: "scanResult",
+                type: "SCAN_RESULT",
                 data: latestScanResult
             });
         }
