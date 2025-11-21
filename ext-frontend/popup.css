@@ -1,16 +1,116 @@
 body {
-    width: 200px;
+    width: 300px;
+    height: 450px;
     padding: 10px;
-    font-family: Arial;
+
+    font-family: "Poppins", sans-serif;
+
+    background-image: url('bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
-input {
+h2{
+    font-weight: 400;
+}
+
+/* LOGO SECTION */
+.logo{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+
+    margin: 10px auto;
+}
+
+.logo img{
+    border-radius: 50%;
+}
+
+/* MAIN CONTENT */
+
+.items-section{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* BLOCKED COUNT */
+
+.blocked-section, .input{
+    display: flex;
+    justify-content: space-between;
+}
+
+.blocked-section{
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 5px;
+}
+
+.blocked-section p{
+    padding: 5px 10px;
+    font-weight: 600;
+    font-size: 1.17em;
+    margin: 0;
+}
+
+/* LOGS */
+
+.logs {
+    max-height: 0px;
+    border-radius: 5px;
+    padding: 0 10px;
+    overflow: auto;
+    background-color: rgba(255,255,255,0.2);
+    transition: max-height 0.3s ease;
+}
+
+.logs p {
+    margin: 2px 0;
+    font-size: 13px;
+     padding-bottom: 4px;
+    border-bottom: 1px solid rgba(0,0,0,0.2);
+}
+
+.dropdown-btn {
     width: 100%;
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+
+    font-weight: bold;
+    text-align: left;
+    font-size: 1.17em;
+
+    margin-bottom: 1rem;
+    padding: 5px 10px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.arrow {
+    transition: transform 0.3s ease;
+}
+
+.logs.expanded {
+    max-height: 150px;             
+    overflow-y: auto;              
+    padding: 5px 10px;             
+}
+
+/* FOR TESTING ONLY */
+
+input {
+    width: 50%;
     padding: 5px;
-    margin-bottom: 10px;
 }
 
 button {
-    width: 100%;
+    width: 30%;
     padding: 7px;
 }

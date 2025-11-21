@@ -2,15 +2,57 @@
 <html>
 <head>
     <title>Extension</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <h2>Phishing Detection</h2>
+    <div class="logo">
+        <img src="icon.png" alt="Logo" width="70" height="70">
+        <h2>Phishing Detection</h2>
+    </div>
 
-    <input id="nameInput" placeholder="Enter" />
-    <button id="sendBtn">Test send to Backend</button>
+    <div class="items-section">
+        <div class="blocked-section">
+            <p>Blocked URLs</p>
+            <p id="blockedCount">0</p>
+        </div>
+        <div class="logs-section">
+            <div class="dropdown">
+            <button class="dropdown-btn">
+                Logs <span class="arrow">&#9660;</span>
+            </button>
+            <div class="logs">
+                <p>Log 1: Something happened</p>
+                <p>Log 2: Another event</p> 
+                <p>Log 3: Yet another event</p>
+                <p>Log 4: Something more</p>
+                <p>Log 5: Extra info</p>
+                <p>Log 6: Extra info</p>
+                <p>Log 7: Extra info</p>
+                <p>Log 3: Yet another event</p>
+                <p>Log 4: Something more</p>
+                <p>Log 5: Extra info</p>
+                <p>Log 6: Extra info</p>
+                <p>Log 7: Extra info</p>
+                <p>Log 3: Yet another event</p>
+                <p>Log 4: Something more</p>
+                <p>Log 5: Extra info</p>
+                <p>Log 6: Extra info</p>
+                <p>Log 7: Extra info</p>
+            </div>
+        </div>
+        </div>
+    </div>
 
-    <p id="result"></p>
+    <div class="test">
+        <div class="input">
+            <button id="sendBtn">Test Send</button>
+            <input id="nameInput" placeholder="Enter" />
+        </div>
+        <p id="result"></p>
+    </div>
 
     <script src="popup.js"></script>
 </body>

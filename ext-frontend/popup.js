@@ -14,3 +14,17 @@ document.getElementById("sendBtn").addEventListener("click", async () => {
     // const data = await res.json();
     // document.getElementById("result").textContent = data.message;
 });
+
+const dropdownBtn = document.querySelector('.dropdown-btn');
+const logs = document.querySelector('.logs');
+const arrow = dropdownBtn.querySelector('.arrow');
+
+dropdownBtn.addEventListener('click', () => {
+    logs.classList.toggle('expanded');         // toggle expanded class
+    if (logs.classList.contains('expanded')) {
+        arrow.style.transform = 'rotate(-180deg)';
+    } else {
+        arrow.style.transform = 'rotate(0deg)';
+    }
+});
+
