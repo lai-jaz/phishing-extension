@@ -18,38 +18,24 @@
             <p>Blocked URLs</p>
             <p id="blockedCount">0</p>
         </div>
+
         <div class="logs-section">
-            <div class="dropdown">
-            <button class="dropdown-btn">
+            <button id="showLogs" class="dropdown-btn">
                 Logs <span class="arrow">&#9660;</span>
             </button>
-            <div class="logs">
-                <p>Log 1: Something happened</p>
-                <p>Log 2: Another event</p> 
-                <p>Log 3: Yet another event</p>
-                <p>Log 4: Something more</p>
-                <p>Log 5: Extra info</p>
-                <p>Log 6: Extra info</p>
-                <p>Log 7: Extra info</p>
-                <p>Log 3: Yet another event</p>
-                <p>Log 4: Something more</p>
-                <p>Log 5: Extra info</p>
-                <p>Log 6: Extra info</p>
-                <p>Log 7: Extra info</p>
-                <p>Log 3: Yet another event</p>
-                <p>Log 4: Something more</p>
-                <p>Log 5: Extra info</p>
-                <p>Log 6: Extra info</p>
-                <p>Log 7: Extra info</p>
-            </div>
-        </div>
-        </div>
-    </div>
+            <div id="logContainer" class="logs"></div> 
+
+            <button id="showBlacklist" class="dropdown-btn">
+                Blacklist <span class="arrow">&#9660;</span>
+            </button>
+            <div id="blacklistContainer" class="logs"></div> 
+        </div> 
+    </div> 
 
     <div class="test">
         <div class="input">
-            <button id="sendBtn">Test Send</button>
-            <input id="nameInput" placeholder="Enter" />
+            <button id="sendBtn">Test Scan</button>
+            <input id="nameInput" placeholder="Enter URL" />
         </div>
         <p id="result"></p>
     </div>
