@@ -5,11 +5,24 @@
   "description": "Phishing detection.",
   "action": {
     "default_popup": "popup.html",
-    "default_icon": "icon.png"
+    "default_icon": "images/logo.png"
   },
-  "permissions": ["storage", "activeTab", "scripting","tabs","webRequest","webRequestBlocking"],
+  "web_accessible_resources": [
+    {
+      "resources": ["images/iconDanger.png", "images/iconSus.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "permissions": ["storage", "activeTab", "scripting","tabs","webRequest","webRequestBlocking", "notifications"],
   "host_permissions":["<all_urls>"],
   "background": {
     "service_worker": "background.js"
+  },
+  "content_scripts": [
+  {
+    "matches": ["<all_urls>"],
+    "js": ["content.js"]
   }
+]
+
 }

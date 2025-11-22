@@ -19,18 +19,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.getElementById("sendBtn").addEventListener("click", () => {
-    const url = document.getElementById("nameInput").value.trim();
-    if (!url) {
-        document.getElementById("result").textContent = "Please enter a URL!";
-        return;
-    }
+    chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: "http://123.45.67.89/very-suspicious-login-update-password.tk" });
 
-    showingManualScan = true;
-    chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: url });
-    document.getElementById("result").innerHTML = `<strong>Scanning:</strong> ${url}`;
+    // const url = document.getElementById("nameInput").value.trim();
+    // if (!url) {
+    //     document.getElementById("result").textContent = "Please enter a URL!";
+    //     return;
+    // }
+
+    // showingManualScan = true;
+    // chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: url });
+    // document.getElementById("result").innerHTML = `<strong>Scanning:</strong> ${url}`;
 });
 
-
+// show result of auto/manual scan
 function displayResult(data) {
     const { url, score, status } = data;
     const prefix = showingManualScan ? "Manual Scan URL" : "URL";
@@ -87,6 +89,7 @@ document.getElementById("showLogs").addEventListener("click", () => {
             });
         }
 
+        // CSS manipulation on expanding dropdown
         container.classList.add("expanded");
         arrow.style.transform = 'rotate(-180deg)';
     });
@@ -123,6 +126,7 @@ document.getElementById("showBlacklist").addEventListener("click", () => {
             });
         }
 
+        // CSS manipulation on expanding dropdown
         container.classList.add("expanded");
         arrow.style.transform = 'rotate(-180deg)';
     });

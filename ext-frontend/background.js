@@ -45,8 +45,16 @@ function scanURL(url) {
     }
 
     let status = "Safe";
-    if (score >= 40 && score < 70) status = "Suspicious";
-    else if (score >= 70) status = "Dangerous";
+    if (score >= 40 && score < 70) 
+    {
+        status = "Suspicious"
+        showUnsafeNotification(url, score, "Suspicious Website Detected!");
+    }
+    else if (score >= 70) 
+    {
+        status = "Dangerous"
+        showUnsafeNotification(url, score, "Dangerous Website Detected!");
+    };
 
     return { url, score, status };
 }
@@ -106,6 +114,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             console.log("Popup not open:", err.message);
         });
 
+        
+        chrome.tabs.sendMessage(tabId, { 
+            type: "SCAN_CONTENT",
+            result: latestScanResult 
+        });
+
         chrome.storage.local.get(["blacklist"], (data) => {
             const blacklist = data.blacklist || [];
             console.log("Checking against blacklist:", blacklist);
@@ -153,5 +167,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return true;
     }
 });
+
+// notification for unsafe site
+function showUnsafeNotification(url, score, message) {
+    chrome.notifications.create({
+        type: "basic",
+        iconUrl: chrome.runtime.getURL( message == "Dangerous" ? "images/iconDanger.png" : "images/iconSus.png"),
+        title: message,
+        message: `${url} is rated ${score}/100)`,
+        priority: 2
+    });
+}
 
 console.log("Background script fully initialized!");

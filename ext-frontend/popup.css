@@ -1,17 +1,17 @@
 body {
     width: 300px;
-    height: 450px;
+    /* height: 450px; */
     padding: 10px;
 
     font-family: "Poppins", sans-serif;
 
-    background-image: url('bg.png');
+    background-image: url('images/bg.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
 
-h2{
+p{
     font-weight: 400;
 }
 
@@ -21,12 +21,13 @@ h2{
     flex-direction: column;
     align-items: center;
     gap: 0;
-
-    margin: 10px auto;
+    margin: 22px auto;
 }
 
-.logo img{
-    border-radius: 50%;
+.logo p{
+    font-size: 1.5em;
+    margin: 0;
+    /* margin-bottom: 24px; */
 }
 
 /* MAIN CONTENT */
@@ -47,6 +48,7 @@ h2{
 .blocked-section{
     background-color: rgba(255,255,255,0.2);
     border-radius: 5px;
+    padding: 5px 0;
 }
 
 .blocked-section p{
@@ -58,10 +60,13 @@ h2{
 
 /* LOGS */
 
+.logs-section {
+    padding: 5px 0;
+}
+
 .logs {
     max-height: 0px;
     border-radius: 5px;
-    padding: 0 10px;
     overflow: auto;
     background-color: rgba(255,255,255,0.2);
     transition: max-height 0.3s ease;
@@ -86,7 +91,7 @@ h2{
     font-size: 1.17em;
 
     margin-bottom: 1rem;
-    padding: 5px 10px;
+    padding: 10px 10px;
 
     display: flex;
     justify-content: space-between;
