@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Phishing Detector Extension",
+  "version": "1.0",
+  "description": "Phishing detection.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "permissions": ["storage", "activeTab", "scripting","tabs","webRequest","webRequestBlocking"],
+  "host_permissions":["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
