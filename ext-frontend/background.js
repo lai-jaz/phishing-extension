@@ -264,3 +264,4 @@ function showUnsafeNotification(url, score, message) {
 }
 
 console.log("Background script fully initialized!");
+
