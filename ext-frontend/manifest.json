@@ -20,7 +20,7 @@
     "tabs",
     "webRequest",
     "notifications"],
-  "host_permissions":["<all_urls>"],
+  "host_permissions":["<all_urls>", "https://safebrowsing.googleapis.com/*"],
   "background": {
     "service_worker": "background.js"
   }

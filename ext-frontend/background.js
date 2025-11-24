@@ -1,7 +1,47 @@
 let latestScanResult = null;
 let redirectURL = "https://google.com";
-
 console.log("Background script loaded at:", new Date().toLocaleString());
+
+const API_KEY = "AIzaSyAWMOXnJlzUdQcclAV6oXBvfk46ehgO-mY";
+
+// google api check function
+async function checkGoogleSafeBrowsing(url) {
+    const endpoint = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${API_KEY}`;
+
+    const body = {
+        client: {
+            clientId: "my-chrome-extension",
+            clientVersion: "1.0"
+        },
+        threatInfo: {
+            threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+            platformTypes: ["ANY_PLATFORM"],
+            threatEntryTypes: ["URL"],
+            threatEntries: [{ url }]
+        }
+    };
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            body: JSON.stringify(body),
+            headers: { "Content-Type": "application/json" }
+        });
+
+        const data = await response.json();
+
+        if (data && data.matches && data.matches.length > 0) {
+            return { dangerous: true, threats: data.matches };
+        } else {
+            return { dangerous: false, threats: [] };
+        }
+    } catch (err) {
+        console.error("Safe Browsing API error:", err);
+        return { dangerous: false, threats: [] };
+    }
+}
+
+
 
 chrome.storage.local.get(["blacklist", "logs"], (data) => {
     const updates = {};
@@ -118,7 +158,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo.status === "complete" && tab.url) {
         if (tab.url.startsWith("chrome://") || tab.url.startsWith("chrome-extension://")) {
             return;
@@ -127,6 +167,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         console.log("Auto-scanning:", tab.url);
         latestScanResult = scanURL(tab.url);
         console.log("Result:", latestScanResult);
+
+        const gsResult = await checkGoogleSafeBrowsing(tab.url);
+        if (gsResult.dangerous) {
+            latestScanResult.status = "Dangerous";
+            latestScanResult.score = 100;
+            latestScanResult.googleThreats = gsResult.threats;
+        }
 
         logURL(latestScanResult);
 
@@ -171,7 +218,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }
 });
 
-
+// manual scan handler (to be REMOVED on final submission)
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     console.log("Message received:", msg.type);
     
