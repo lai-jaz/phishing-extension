@@ -2,7 +2,7 @@ let latestScanResult = null;
 let redirectURL = "https://google.com";
 console.log("Background script loaded at:", new Date().toLocaleString());
 
-const API_KEY = "AIzaSyAWMOXnJlzUdQcclAV6oXBvfk46ehgO-mY";
+const API_KEY = "<API-KEY>";
 
 // google api check function
 async function checkGoogleSafeBrowsing(url) {
@@ -257,3 +257,4 @@ function showUnsafeNotification(url, score, message) {
 }
 
 console.log("Background script fully initialized!");
+
