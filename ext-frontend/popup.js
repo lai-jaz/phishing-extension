@@ -96,11 +96,11 @@ document.getElementById("showLogs").addEventListener("click", () => {
 });
 
 
+// Show/Hide blacklist
 document.getElementById("showBlacklist").addEventListener("click", () => {
     const container = document.getElementById("blacklistContainer");
     const arrow = document.querySelector('#showBlacklist .arrow');
     
-   
     const isExpanded = container.classList.contains("expanded");
     
     if (isExpanded) {
@@ -109,25 +109,101 @@ document.getElementById("showBlacklist").addEventListener("click", () => {
         return;
     }
     
-    
+    loadBlacklist();
+    container.classList.add("expanded");
+    arrow.style.transform = 'rotate(-180deg)';
+});
+
+// Load and display blacklist
+function loadBlacklist() {
     chrome.storage.local.get(["blacklist"], (data) => {
-        console.log("Retrieved blacklist:", data); 
+        console.log("Retrieved blacklist:", data);
         
         const list = data.blacklist || [];
-        container.innerHTML = "";
+        const itemsContainer = document.getElementById("blacklistItems");
+        itemsContainer.innerHTML = "";
 
         if (list.length === 0) {
-            container.innerHTML = "<p>No blacklisted domains.</p>";
+            itemsContainer.innerHTML = "<p>No blacklisted domains.</p>";
         } else {
-            list.forEach(domain => {
+            list.forEach((domain) => {
                 const p = document.createElement("p");
-                p.textContent = `${domain}`;
-                container.appendChild(p);
+                
+                const span = document.createElement("span");
+                span.textContent = `${domain}`;
+                
+               const removeBtn = document.createElement("button");
+               removeBtn.className = "remove-btn";
+               removeBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" height="14" width="14" viewBox="0 0 24 24" fill="white">
+        <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5c-.1.8-.8 1.5-1.7 1.5H8.2c-.9 0-1.6-.7-1.7-1.5L5 9zm5-6h4v2h-4V3z"/>
+    </svg>
+`;
+removeBtn.onclick = () => removeFromBlacklist(domain);
+
+                
+                p.appendChild(span);
+                p.appendChild(removeBtn);
+                itemsContainer.appendChild(p);
             });
         }
-
-        // CSS manipulation on expanding dropdown
-        container.classList.add("expanded");
-        arrow.style.transform = 'rotate(-180deg)';
     });
+}
+
+// Add to blacklist
+document.getElementById("addBlacklist").addEventListener("click", () => {
+    const input = document.getElementById("blacklistInput");
+    const domain = input.value.trim().toLowerCase();
+    
+    if (!domain) {
+        alert("Please enter a domain!");
+        return;
+    }
+    
+    // Basic validation
+    if (domain.includes(" ") || domain.includes("/")) {
+        alert("Enter only the domain (e.g., example.com)");
+        return;
+    }
+    
+    chrome.storage.local.get(["blacklist"], (data) => {
+        const blacklist = data.blacklist || [];
+        
+        if (blacklist.includes(domain)) {
+            alert("This domain is already blacklisted!");
+            return;
+        }
+        
+        blacklist.push(domain);
+        chrome.storage.local.set({ blacklist: blacklist }, () => {
+            console.log("Domain added to blacklist:", domain);
+            input.value = "";
+            loadBlacklist();
+        });
+    });
+});
+
+// Remove from blacklist
+function removeFromBlacklist(domain) {
+    if (!confirm(`Remove ${domain} from blacklist?`)) {
+        return;
+    }
+    
+    chrome.storage.local.get(["blacklist"], (data) => {
+        let blacklist = data.blacklist || [];
+        
+        blacklist = blacklist.filter(d => d !== domain);
+        
+        chrome.storage.local.set({ blacklist: blacklist }, () => {
+            console.log("Domain removed from blacklist:", domain);
+            loadBlacklist();
+        });
+    });
+}
+
+// Allow pressing Enter to add
+document.getElementById("blacklistInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        document.getElementById("addBlacklist").click();
+    }
 });
