@@ -19,17 +19,17 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.getElementById("sendBtn").addEventListener("click", () => {
-    chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: "http://123.45.67.89/very-suspicious-login-update-password.tk" });
+    // chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: "http://999.888.777.666/verify-login-update-password-info.xyz/secure@account" });
 
-    // const url = document.getElementById("nameInput").value.trim();
-    // if (!url) {
-    //     document.getElementById("result").textContent = "Please enter a URL!";
-    //     return;
-    // }
+    const url = document.getElementById("nameInput").value.trim();
+    if (!url) {
+        document.getElementById("result").textContent = "Please enter a URL!";
+        return;
+    }
 
-    // showingManualScan = true;
-    // chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: url });
-    // document.getElementById("result").innerHTML = `<strong>Scanning:</strong> ${url}`;
+    showingManualScan = true;
+    chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: url });
+    document.getElementById("result").innerHTML = `<strong>Scanning:</strong> ${url}`;
 });
 
 // show result of auto/manual scan

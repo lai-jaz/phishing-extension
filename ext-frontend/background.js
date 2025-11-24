@@ -23,7 +23,7 @@ function scanURL(url) {
         const parsedUrl = new URL(url);
         const hostname = parsedUrl.hostname;
 
-        if (url.length > 75) score += 15;
+        if ((hostname + parsedUrl.pathname).length > 75) score += 15;
         if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) score += 20;
 
         const suspiciousTLDs = [".tk", ".ml", ".ga", ".cf", ".xyz", ".biz", ".info", ".top"];
@@ -32,16 +32,18 @@ function scanURL(url) {
         const hyphenCount = (hostname.match(/-/g) || []).length;
         if (hyphenCount > 1) score += 10;
 
-        if (url.includes("@")) score += 15;
+        if (parsedUrl.href.split(parsedUrl.hostname)[1].includes("@")) score += 15;
         if (hostname.split(".").length > 3) score += 10;
-        if (!url.startsWith("https")) score += 15;
+        if (parsedUrl.protocol !== "https:") score += 15;
         if (hostname.includes("xn--")) score += 20;
 
         const keywords = ["login", "secure", "account", "verify", "update", "password"];
-        if (keywords.some(word => hostname.toLowerCase().includes(word))) score += 10;
+        if (keywords.some(word => parsedUrl.pathname.toLowerCase().includes(word))) score += 10;
 
     } catch (e) {
         console.error("Invalid URL:", e);
+        showUnsafeNotification(url, score, "Invalid URL!");
+        return { url, score: 0, status: "Invalid URL" };
     }
 
     let status = "Safe";
@@ -107,13 +109,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
         logURL(latestScanResult);
 
+        // if (latestScanResult.status === "Dangerous") {
+        //     chrome.tabs.update(tabId, { url: "https://google.com" });
+        //     console.warn("Blocked Dangerous URL:", tab.url);
+        //     showUnsafeNotification(tab.url, latestScanResult.score, "Blocked Dangerous Website!");
+        //     return;
+        // }
+
         chrome.runtime.sendMessage({
             type: "SCAN_RESULT",
             data: latestScanResult
         }).catch((err) => {
             console.log("Popup not open:", err.message);
         });
-
         
         chrome.tabs.sendMessage(tabId, { 
             type: "SCAN_CONTENT",
@@ -172,7 +180,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 function showUnsafeNotification(url, score, message) {
     chrome.notifications.create({
         type: "basic",
-        iconUrl: chrome.runtime.getURL( message == "Dangerous" ? "images/iconDanger.png" : "images/iconSus.png"),
+        iconUrl: chrome.runtime.getURL( message.includes("Dangerous") ? "images/iconDanger.png" : "images/iconSus.png"),
         title: message,
         message: `${url} is rated ${score}/100)`,
         priority: 2

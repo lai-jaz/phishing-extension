@@ -13,16 +13,18 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "permissions": ["storage", "activeTab", "scripting","tabs","webRequest","webRequestBlocking", "notifications"],
+  "permissions": [
+    "storage", 
+    "activeTab", 
+    "scripting",
+    "tabs",
+    "webRequest",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "notifications"],
   "host_permissions":["<all_urls>"],
   "background": {
     "service_worker": "background.js"
-  },
-  "content_scripts": [
-  {
-    "matches": ["<all_urls>"],
-    "js": ["content.js"]
   }
-]
 
 }
