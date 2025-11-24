@@ -3,20 +3,29 @@ let redirectURL = "https://google.com";
 
 console.log("Background script loaded at:", new Date().toLocaleString());
 
-chrome.storage.local.set({
-    blacklist: ["phishing.com", "malicious.example", "scam-site.tk"],
-    logs: []
-}, () => {
-    if (chrome.runtime.lastError) {
-        console.error("Init error:", chrome.runtime.lastError);
-    } else {
-        console.log("Storage FORCE initialized!");
-        chrome.storage.local.get(null, (data) => {
-            console.log("Verification - Storage now contains:", data);
+chrome.storage.local.get(["blacklist", "logs"], (data) => {
+    const updates = {};
+    
+    if (!data.blacklist || data.blacklist.length === 0) {
+        updates.blacklist = ["phishing.com", "malicious.example", "scam-site.tk"];
+    }
+    
+    if (!data.logs) {
+        updates.logs = [];
+    }
+    
+    if (Object.keys(updates).length > 0) {
+        chrome.storage.local.set(updates, () => {
+            if (chrome.runtime.lastError) {
+                console.error("Init error:", chrome.runtime.lastError);
+            } else {
+                console.log("Storage initialized!");
+            }
         });
+    } else {
+        console.log("Storage OK. Logs:", data.logs?.length || 0);
     }
 });
-
 
 function scanURL(url) {
     let score = 0;
@@ -89,11 +98,22 @@ function logURL(scanResult) {
 chrome.runtime.onInstalled.addListener((details) => {
     console.log("onInstalled triggered! Reason:", details.reason);
     
-    chrome.storage.local.set({
-        blacklist: ["phishing.com", "malicious.example", "scam-site.tk"],
-        logs: []
-    }, () => {
-        console.log("Storage initialized via onInstalled");
+    chrome.storage.local.get(["blacklist", "logs"], (data) => {
+        const updates = {};
+        
+        if (!data.blacklist || data.blacklist.length === 0) {
+            updates.blacklist = ["phishing.com", "malicious.example", "scam-site.tk"];
+        }
+        
+        if (!data.logs) {
+            updates.logs = [];
+        }
+        
+        if (Object.keys(updates).length > 0) {
+            chrome.storage.local.set(updates, () => {
+                console.log("Storage initialized via onInstalled");
+            });
+        }
     });
 });
 
