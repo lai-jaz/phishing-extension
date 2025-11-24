@@ -1,4 +1,5 @@
 let latestScanResult = null;
+let redirectURL = "https://google.com";
 
 console.log("Background script loaded at:", new Date().toLocaleString());
 
@@ -109,12 +110,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
         logURL(latestScanResult);
 
-        // if (latestScanResult.status === "Dangerous") {
-        //     chrome.tabs.update(tabId, { url: "https://google.com" });
-        //     console.warn("Blocked Dangerous URL:", tab.url);
-        //     showUnsafeNotification(tab.url, latestScanResult.score, "Blocked Dangerous Website!");
-        //     return;
-        // }
+        // block URL if dangerous
+        if (latestScanResult.status === "Dangerous") {
+            chrome.tabs.update(tabId, { url: redirectURL });
+            showUnsafeNotification(tab.url, latestScanResult.score, "Blocked Dangerous Website!");
+            return;
+        }
 
         chrome.runtime.sendMessage({
             type: "SCAN_RESULT",
@@ -135,10 +136,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             try {
                 const hostname = new URL(tab.url).hostname;
                 
+                // block URL
                 for (const blocked of blacklist) {
                     if (hostname.includes(blocked)) {
-                        chrome.tabs.update(tabId, { url: "https://google.com" });
-                        console.warn("BLOCKED URL:", tab.url);
+                        chrome.tabs.update(tabId, { url: redirectURL });
+                        showUnsafeNotification(tab.url, 100, "Blacklisted Website!");
                         return;
                     }
                 }
