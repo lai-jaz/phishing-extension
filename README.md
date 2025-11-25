@@ -61,10 +61,6 @@ A browser extension that detects suspicious or potentially malicious websites in
   - Triggers notifications for unsafe URLs  
   - Handles manual scans
 
-- **Content Script (`content.js`)**  
-  - Receives scan results  
-  - Highlights Dangerous sites with a red border
-
 - **Popup (`popup.html`, `popup.js`, `popup.css`)**  
   - Displays blocked URL count  
   - Shows logs and blacklist in collapsible sections  
