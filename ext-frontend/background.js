@@ -2,7 +2,7 @@ let latestScanResult = null;
 let redirectURL = "https://google.com";
 console.log("Background script loaded at:", new Date().toLocaleString());
 
-const API_KEY = "<API-KEY>";
+let API_KEY = "<API-KEY>";
 
 fetch(chrome.runtime.getURL("config.json"))
   .then(r => r.json())
@@ -10,6 +10,11 @@ fetch(chrome.runtime.getURL("config.json"))
       API_KEY = cfg.SAFE_BROWSING_KEY;
       console.log("Key loaded");
   });
+chrome.storage.local.get(["blockedCount"], (data) => {
+    if (typeof data.blockedCount !== "number") {
+        chrome.storage.local.set({ blockedCount: 0 });
+    }
+});
 
 // google api check function
 async function checkGoogleSafeBrowsing(url) {
@@ -187,7 +192,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         // block URL if dangerous
         if (latestScanResult.status === "Dangerous") {
             chrome.tabs.update(tabId, { url: redirectURL });
-            showUnsafeNotification(tab.url, latestScanResult.score, "Blocked Dangerous Website!");
+            showUnsafeNotification(tab.url, 100, "Blocked Dangerous Website!");
+            incrementBlockedCount();
             return;
         }
 
@@ -215,6 +221,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
                     if (hostname.includes(blocked)) {
                         chrome.tabs.update(tabId, { url: redirectURL });
                         showUnsafeNotification(tab.url, 100, "Blacklisted Website!");
+                        incrementBlockedCount();
                         return;
                     }
                 }
@@ -250,6 +257,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse(latestScanResult);
         return true;
     }
+    if(msg.type==="BLOCK_COUNT_UPDATE")
+    {
+        document.getElementById("blockedCount").textContent=msg.count;
+    }
 });
 
 // notification for unsafe site
@@ -258,10 +269,26 @@ function showUnsafeNotification(url, score, message) {
         type: "basic",
         iconUrl: chrome.runtime.getURL( message.includes("Dangerous") ? "images/iconDanger.png" : "images/iconSus.png"),
         title: message,
-        message: `${url} is rated ${score}/100)`,
+        message: `${url} is rated ${score}/100`,
         priority: 2
     });
 }
 
 console.log("Background script fully initialized!");
 
+function incrementBlockedCount() {
+    chrome.storage.local.get(["blockedCount"], (data) => {
+        let count = data.blockedCount || 0;
+        count++;
+
+        chrome.storage.local.set({ blockedCount: count }, () => {
+            console.log("Blocked count updated:", count);
+
+            // Update popup live (if open)
+            chrome.runtime.sendMessage({
+                type: "BLOCKED_COUNT_UPDATE",
+                count: count
+            });
+        });
+    });
+}
