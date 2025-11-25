@@ -79,8 +79,10 @@ chrome.storage.local.get(["blacklist", "logs"], (data) => {
     }
 });
 
-function scanURL(url) {
+async function scanURL(url) {
     let score = 0;
+    let status = "Safe";
+
     try {
         const parsedUrl = new URL(url);
         const hostname = parsedUrl.hostname;
@@ -108,20 +110,59 @@ function scanURL(url) {
         return { url, score: 0, status: "Invalid URL" };
     }
 
-    let status = "Safe";
-    if (score >= 40 && score < 70) 
-    {
-        status = "Suspicious"
+    // score check
+    if (score >= 40 && score < 70) {
+        status = "Suspicious";
         showUnsafeNotification(url, score, "Suspicious Website Detected!");
-    }
-    else if (score >= 70) 
-    {
-        status = "Dangerous"
+    } else if (score >= 70) {
+        status = "Dangerous";
         showUnsafeNotification(url, score, "Dangerous Website Detected!");
-    };
+    }
+
+    // async blacklist check
+    try {
+        const blacklistData = await new Promise((resolve) => {
+            chrome.storage.local.get(["blacklist"], resolve);
+        });
+
+        const blacklist = blacklistData.blacklist || [];
+        const hostname = new URL(url).hostname;
+
+        for (const blocked of blacklist) {
+            if (hostname.includes(blocked)) {
+                score = 100;
+                status = "Dangerous";
+                break;
+            }
+        }
+    } catch (e) {
+        console.error("Error checking blacklist:", e);
+    }
 
     return { url, score, status };
 }
+
+
+function checkBlacklist(url, score, status) {
+    chrome.storage.local.get(["blacklist"], (data) => {
+        const blacklist = data.blacklist || [];
+        console.log("Checking against blacklist");
+        try {
+            const hostname = new URL(url.startsWith("http") ? url : "https://" + url).hostname;
+            for (const blocked of blacklist) {
+                if (hostname.includes(blocked)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (e) {
+            console.error("Error checking blacklist:", e);
+            return false;
+        }
+    });
+}
+
 
 function logURL(scanResult) {
     const entry = { ...scanResult, timestamp: new Date().toLocaleString() };
@@ -177,9 +218,11 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         }
 
         console.log("Auto-scanning:", tab.url);
-        latestScanResult = scanURL(tab.url);
-        console.log("Result:", latestScanResult);
 
+        latestScanResult = await scanURL(tab.url);
+        console.log("Scan result:", latestScanResult);
+
+        // check Google Safe Browsing
         const gsResult = await checkGoogleSafeBrowsing(tab.url);
         if (gsResult.dangerous) {
             latestScanResult.status = "Dangerous";
@@ -189,7 +232,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
         logURL(latestScanResult);
 
-        // block URL if dangerous
+        // block url
         if (latestScanResult.status === "Dangerous") {
             chrome.tabs.update(tabId, { url: redirectURL });
             showUnsafeNotification(tab.url, 100, "Blocked Dangerous Website!");
@@ -208,60 +251,40 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             type: "SCAN_CONTENT",
             result: latestScanResult 
         });
-
-        chrome.storage.local.get(["blacklist"], (data) => {
-            const blacklist = data.blacklist || [];
-            console.log("Checking against blacklist:", blacklist);
-            
-            try {
-                const hostname = new URL(tab.url).hostname;
-                
-                // block URL
-                for (const blocked of blacklist) {
-                    if (hostname.includes(blocked)) {
-                        chrome.tabs.update(tabId, { url: redirectURL });
-                        showUnsafeNotification(tab.url, 100, "Blacklisted Website!");
-                        incrementBlockedCount();
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.error("Error checking blacklist:", e);
-            }
-        });
     }
 });
 
+
 // manual scan handler (to be REMOVED on final submission)
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    console.log("Message received:", msg.type);
-    
     if (msg.type === "MANUAL_SCAN") {
-        console.log("Manual scan for:", msg.url);
-        latestScanResult = scanURL(msg.url);
-        console.log("Manual result:", latestScanResult);
-        
-        logURL(latestScanResult);
+        (async () => {
+            console.log("Manual scan for:", msg.url);
+            latestScanResult = await scanURL(msg.url);
+            console.log("Scan result:", latestScanResult);
 
-        chrome.runtime.sendMessage({
-            type: "SCAN_RESULT",
-            data: latestScanResult
-        }).catch(() => {});
-        
-        sendResponse({ success: true });
+            logURL(latestScanResult);
+
+            chrome.runtime.sendMessage({
+                type: "SCAN_RESULT",
+                data: latestScanResult
+            }).catch(() => {});
+
+            sendResponse({ success: true });
+        })();
         return true;
     }
 
     if (msg.type === "GET_SCAN_RESULT") {
-        console.log("Returning latest scan:", latestScanResult);
         sendResponse(latestScanResult);
         return true;
     }
-    if(msg.type==="BLOCK_COUNT_UPDATE")
-    {
-        document.getElementById("blockedCount").textContent=msg.count;
+
+    if (msg.type === "BLOCK_COUNT_UPDATE") {
+        document.getElementById("blockedCount").textContent = msg.count;
     }
 });
+
 
 // notification for unsafe site
 function showUnsafeNotification(url, score, message) {
@@ -283,8 +306,6 @@ function incrementBlockedCount() {
 
         chrome.storage.local.set({ blockedCount: count }, () => {
             console.log("Blocked count updated:", count);
-
-            // Update popup live (if open)
             chrome.runtime.sendMessage({
                 type: "BLOCKED_COUNT_UPDATE",
                 count: count

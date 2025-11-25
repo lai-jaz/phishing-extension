@@ -108,16 +108,40 @@ p{
     padding: 5px 10px;             
 }
 
-/* FOR TESTING ONLY */
+/* Checking URL */
 
-input {
-    width: 50%;
-    padding: 5px;
+.input input {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 3px;
+    font-size: 12px;
+    width: auto;
 }
 
-button {
+.input button{
     width: 30%;
-    padding: 7px;
+    padding: 5px;
+    margin-left: 5px;
+    background-color: #00E06C;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.input button:hover {
+    background-color: #77e0df;
+}
+
+#result {
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 5px;
+    border: none;
+    margin-bottom: 1rem;
+    padding: 10px 10px;
 }
 
 /* Blacklist Controls */

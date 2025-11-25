@@ -22,14 +22,15 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.getElementById("sendBtn").addEventListener("click", () => {
-    // chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: "http://999.888.777.666/verify-login-update-password-info.xyz/secure@account" });
-
-    const url = document.getElementById("nameInput").value.trim();
+    let url = document.getElementById("nameInput").value.trim();
     if (!url) {
         document.getElementById("result").textContent = "Please enter a URL!";
         return;
     }
 
+    if (!/^https?:\/\//i.test(url)) {
+        url = "https://" + url;
+    }
     showingManualScan = true;
     chrome.runtime.sendMessage({ type: "MANUAL_SCAN", url: url });
     document.getElementById("result").innerHTML = `<strong>Scanning:</strong> ${url}`;
