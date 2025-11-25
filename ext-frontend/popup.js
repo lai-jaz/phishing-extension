@@ -1,4 +1,7 @@
 let showingManualScan = false;
+chrome.storage.local.get(["blockedCount"], (data) => {
+    document.getElementById("blockedCount").textContent = data.blockedCount || 0;
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -39,7 +42,7 @@ function displayResult(data) {
     
     document.getElementById("result").innerHTML =
         `<strong>${prefix}:</strong> ${url}<br>
-         <strong>Score:</strong> ${score}/100<br>
+         <strong>Threat Level:</strong> ${score}/100<br>
          <strong>Status:</strong> ${status}`;
     
     if (showingManualScan) {
