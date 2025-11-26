@@ -1,14 +1,13 @@
 let latestScanResult = null;
 let redirectURL = "https://google.com";
-console.log("Background script loaded at:", new Date().toLocaleString());
 
 let API_KEY = "<API-KEY>";
 
+// get api
 fetch(chrome.runtime.getURL("config.json"))
   .then(r => r.json())
   .then(cfg => {
       API_KEY = cfg.SAFE_BROWSING_KEY;
-      console.log("Key loaded");
   });
 chrome.storage.local.get(["blockedCount"], (data) => {
     if (typeof data.blockedCount !== "number") {
@@ -16,45 +15,7 @@ chrome.storage.local.get(["blockedCount"], (data) => {
     }
 });
 
-// google api check function
-async function checkGoogleSafeBrowsing(url) {
-    const endpoint = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${API_KEY}`;
-
-    const body = {
-        client: {
-            clientId: "my-chrome-extension",
-            clientVersion: "1.0"
-        },
-        threatInfo: {
-            threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
-            platformTypes: ["ANY_PLATFORM"],
-            threatEntryTypes: ["URL"],
-            threatEntries: [{ url }]
-        }
-    };
-
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            body: JSON.stringify(body),
-            headers: { "Content-Type": "application/json" }
-        });
-
-        const data = await response.json();
-
-        if (data && data.matches && data.matches.length > 0) {
-            return { dangerous: true, threats: data.matches };
-        } else {
-            return { dangerous: false, threats: [] };
-        }
-    } catch (err) {
-        console.error("Safe Browsing API error:", err);
-        return { dangerous: false, threats: [] };
-    }
-}
-
-
-
+// load blacklist on startup
 chrome.storage.local.get(["blacklist", "logs"], (data) => {
     const updates = {};
     
@@ -70,15 +31,36 @@ chrome.storage.local.get(["blacklist", "logs"], (data) => {
         chrome.storage.local.set(updates, () => {
             if (chrome.runtime.lastError) {
                 console.error("Init error:", chrome.runtime.lastError);
-            } else {
-                console.log("Storage initialized!");
             }
         });
-    } else {
-        console.log("Storage OK. Logs:", data.logs?.length || 0);
     }
 });
 
+// load blacklist on installed
+chrome.runtime.onInstalled.addListener((details) => {
+    
+    chrome.storage.local.get(["blacklist", "logs"], (data) => {
+        const updates = {};
+        
+        if (!data.blacklist || data.blacklist.length === 0) {
+            updates.blacklist = ["phishing.com", "malicious.example", "scam-site.tk"];
+        }
+        
+        if (!data.logs) {
+            updates.logs = [];
+        }
+        
+        if (Object.keys(updates).length > 0) {
+            chrome.storage.local.set(updates, () => {
+                if (chrome.runtime.lastError) {
+                    console.error("Init error:", chrome.runtime.lastError);
+                }
+            });
+        }
+    });
+});
+
+// URL scanning function
 async function scanURL(url) {
     let score = 0;
     let status = "Safe";
@@ -142,28 +124,44 @@ async function scanURL(url) {
     return { url, score, status };
 }
 
+// google api check function
+async function checkGoogleSafeBrowsing(url) {
+    const endpoint = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${API_KEY}`;
 
-function checkBlacklist(url, score, status) {
-    chrome.storage.local.get(["blacklist"], (data) => {
-        const blacklist = data.blacklist || [];
-        console.log("Checking against blacklist");
-        try {
-            const hostname = new URL(url.startsWith("http") ? url : "https://" + url).hostname;
-            for (const blocked of blacklist) {
-                if (hostname.includes(blocked)) {
-                    return true;
-                }
-            }
-
-            return false;
-        } catch (e) {
-            console.error("Error checking blacklist:", e);
-            return false;
+    const body = {
+        client: {
+            clientId: "my-chrome-extension",
+            clientVersion: "1.0"
+        },
+        threatInfo: {
+            threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+            platformTypes: ["ANY_PLATFORM"],
+            threatEntryTypes: ["URL"],
+            threatEntries: [{ url }]
         }
-    });
+    };
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            body: JSON.stringify(body),
+            headers: { "Content-Type": "application/json" }
+        });
+
+        const data = await response.json();
+
+        if (data && data.matches && data.matches.length > 0) {
+            return { dangerous: true, threats: data.matches };
+        } else {
+            return { dangerous: false, threats: [] };
+        }
+    } catch (err) {
+        console.error("Safe Browsing API error:", err);
+        return { dangerous: false, threats: [] };
+    }
 }
 
-
+// add scan result to logs
 function logURL(scanResult) {
     const entry = { ...scanResult, timestamp: new Date().toLocaleString() };
     
@@ -180,47 +178,19 @@ function logURL(scanResult) {
         chrome.storage.local.set({ logs: logs }, () => {
             if (chrome.runtime.lastError) {
                 console.error("Error saving log:", chrome.runtime.lastError);
-            } else {
-                console.log("Log saved! Total:", logs.length, "Entry:", entry);
             }
         });
     });
 }
 
-
-chrome.runtime.onInstalled.addListener((details) => {
-    console.log("onInstalled triggered! Reason:", details.reason);
-    
-    chrome.storage.local.get(["blacklist", "logs"], (data) => {
-        const updates = {};
-        
-        if (!data.blacklist || data.blacklist.length === 0) {
-            updates.blacklist = ["phishing.com", "malicious.example", "scam-site.tk"];
-        }
-        
-        if (!data.logs) {
-            updates.logs = [];
-        }
-        
-        if (Object.keys(updates).length > 0) {
-            chrome.storage.local.set(updates, () => {
-                console.log("Storage initialized via onInstalled");
-            });
-        }
-    });
-});
-
-
+// scan on tab load
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo.status === "complete" && tab.url) {
         if (tab.url.startsWith("chrome://") || tab.url.startsWith("chrome-extension://")) {
             return;
         }
 
-        console.log("Auto-scanning:", tab.url);
-
         latestScanResult = await scanURL(tab.url);
-        console.log("Scan result:", latestScanResult);
 
         // check Google Safe Browsing
         const gsResult = await checkGoogleSafeBrowsing(tab.url);
@@ -254,14 +224,11 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
 });
 
-
-// manual scan handler (to be REMOVED on final submission)
+// manual scan handler
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === "MANUAL_SCAN") {
         (async () => {
-            console.log("Manual scan for:", msg.url);
             latestScanResult = await scanURL(msg.url);
-            console.log("Scan result:", latestScanResult);
 
             logURL(latestScanResult);
 
@@ -297,15 +264,13 @@ function showUnsafeNotification(url, score, message) {
     });
 }
 
-console.log("Background script fully initialized!");
-
+// increment blocked count
 function incrementBlockedCount() {
     chrome.storage.local.get(["blockedCount"], (data) => {
         let count = data.blockedCount || 0;
         count++;
 
         chrome.storage.local.set({ blockedCount: count }, () => {
-            console.log("Blocked count updated:", count);
             chrome.runtime.sendMessage({
                 type: "BLOCKED_COUNT_UPDATE",
                 count: count

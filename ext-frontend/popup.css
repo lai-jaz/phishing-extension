@@ -1,6 +1,5 @@
 body {
     width: 300px;
-    /* height: 450px; */
     padding: 10px;
 
     font-family: "Poppins", sans-serif;
@@ -27,7 +26,6 @@ p{
 .logo p{
     font-size: 1.5em;
     margin: 0;
-    /* margin-bottom: 24px; */
 }
 
 /* MAIN CONTENT */
@@ -108,7 +106,7 @@ p{
     padding: 5px 10px;             
 }
 
-/* Checking URL */
+/* URL CHECK */
 
 .input input {
     flex: 1;
@@ -144,7 +142,7 @@ p{
     padding: 10px 10px;
 }
 
-/* Blacklist Controls */
+/* BLACKLIST */
 .blacklist-controls {
     display: flex;
     gap: 5px;

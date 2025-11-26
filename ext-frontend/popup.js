@@ -3,6 +3,7 @@ chrome.storage.local.get(["blockedCount"], (data) => {
     document.getElementById("blockedCount").textContent = data.blockedCount || 0;
 });
 
+// on popup load:
 document.addEventListener("DOMContentLoaded", () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (!tabs[0]) return;
@@ -21,8 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// check url button:
 document.getElementById("sendBtn").addEventListener("click", () => {
-    let url = document.getElementById("nameInput").value.trim();
+    let url = document.getElementById("urlInput").value.trim();
     if (!url) {
         document.getElementById("result").textContent = "Please enter a URL!";
         return;
@@ -36,7 +38,7 @@ document.getElementById("sendBtn").addEventListener("click", () => {
     document.getElementById("result").innerHTML = `<strong>Scanning:</strong> ${url}`;
 });
 
-// show result of auto/manual scan
+// show result of auto/manual scan:
 function displayResult(data) {
     const { url, score, status } = data;
     const prefix = showingManualScan ? "Manual Scan URL" : "URL";
@@ -51,14 +53,14 @@ function displayResult(data) {
     }
 }
 
-
+// scan result listener:
 chrome.runtime.onMessage.addListener((message) => {
     if (message.type === "SCAN_RESULT") {
         displayResult(message.data);
     }
 });
 
-
+// show/hide logs:
 document.getElementById("showLogs").addEventListener("click", () => {
     const container = document.getElementById("logContainer");
     const arrow = document.querySelector('#showLogs .arrow');
@@ -75,7 +77,6 @@ document.getElementById("showLogs").addEventListener("click", () => {
     
     
     chrome.storage.local.get(["logs"], (data) => {
-        console.log("Retrieved logs:", data); // Debug
         
         const logs = data.logs || [];
         container.innerHTML = "";
@@ -100,7 +101,7 @@ document.getElementById("showLogs").addEventListener("click", () => {
 });
 
 
-// Show/Hide blacklist
+// show/hide blacklist:
 document.getElementById("showBlacklist").addEventListener("click", () => {
     const container = document.getElementById("blacklistContainer");
     const arrow = document.querySelector('#showBlacklist .arrow');
@@ -118,10 +119,9 @@ document.getElementById("showBlacklist").addEventListener("click", () => {
     arrow.style.transform = 'rotate(-180deg)';
 });
 
-// Load and display blacklist
+// load and display blacklist:
 function loadBlacklist() {
     chrome.storage.local.get(["blacklist"], (data) => {
-        console.log("Retrieved blacklist:", data);
         
         const list = data.blacklist || [];
         const itemsContainer = document.getElementById("blacklistItems");
@@ -154,7 +154,7 @@ removeBtn.onclick = () => removeFromBlacklist(domain);
     });
 }
 
-// Add to blacklist
+// add to blacklist:
 document.getElementById("addBlacklist").addEventListener("click", () => {
     const input = document.getElementById("blacklistInput");
     const domain = input.value.trim().toLowerCase();
@@ -164,7 +164,6 @@ document.getElementById("addBlacklist").addEventListener("click", () => {
         return;
     }
     
-    // Basic validation
     if (domain.includes(" ") || domain.includes("/")) {
         alert("Enter only the domain (e.g., example.com)");
         return;
@@ -180,14 +179,13 @@ document.getElementById("addBlacklist").addEventListener("click", () => {
         
         blacklist.push(domain);
         chrome.storage.local.set({ blacklist: blacklist }, () => {
-            console.log("Domain added to blacklist:", domain);
             input.value = "";
             loadBlacklist();
         });
     });
 });
 
-// Remove from blacklist
+// remove from blacklist:
 function removeFromBlacklist(domain) {
     if (!confirm(`Remove ${domain} from blacklist?`)) {
         return;
@@ -199,13 +197,12 @@ function removeFromBlacklist(domain) {
         blacklist = blacklist.filter(d => d !== domain);
         
         chrome.storage.local.set({ blacklist: blacklist }, () => {
-            console.log("Domain removed from blacklist:", domain);
             loadBlacklist();
         });
     });
 }
 
-// Allow pressing Enter to add
+// enable Enter key to add:
 document.getElementById("blacklistInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
         document.getElementById("addBlacklist").click();
